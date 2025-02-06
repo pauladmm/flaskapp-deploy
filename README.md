@@ -40,3 +40,55 @@ FLASK_ENV=production
 
 wsgi.py will tell the app how to comunicate with the server
 production is the app state
+
+After this the virtual environment can be started with
+
+```
+pipenv shell
+```
+
+And it is showed as:
+![pipenv shell](/img/pipenv-shell.PNG)
+
+Inside the virtual environment, Flask and Gunicorn are installed.
+
+```
+pipenv install flask gunicorn
+```
+
+Two files inside the virtual environment are created: application.py and wsgi.py. This two files contain information about the App (Proof of Concept App)
+
+- application.py will contain the app itself.
+- wsgi.py will contain the way to run it.
+
+Yet inside the virtual environment, the app is runned the following way, to host it in any IP available:
+
+```
+flask run --host '0.0.0.0'
+```
+
+It can be accessed in http://IP-maq-virtual:5000, in this case the url was http://127.0.0.1:5000
+
+![App Deployed](/img/app-deployed.PNG)
+
+To check the deployment with Gunicorn this command was used (inside the virtual environment):
+
+```
+gunicorn --workers 4 --bind 0.0.0.0:5000 wsgi:app
+```
+
+And in the same url the app can be seen.
+![App Deployed with Gunicorn](/img/gunicorn-app-deployed.PNG)
+![App Deployed](/img/app-deployed.PNG)
+
+This app is runned trough a path that can be checked with:
+
+```
+which gunicorn
+```
+
+In this case:
+
+```
+/home/vagrant/.local/share/virtualenvs/myapp-UTYI2jO8/bin/gunicorn
+```
