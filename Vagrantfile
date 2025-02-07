@@ -21,25 +21,26 @@ Vagrant.configure("2") do |config|
     cp /vagrant/files/.env /var/www/myapp/.env
     cp /vagrant/files/flask_app.service /etc/systemd/system/flask_app.service
     
-    # Reload system
-    systemctl daemon-reload
-    systemctl enable flask_app
-    systemctl start flask_app
-
     # Nginx Server Configuration
     cp /vagrant/files/myapp.conf /etc/nginx/sites-available/myapp.conf
     ln -s /etc/nginx/sites-available/myapp.conf /etc/nginx/sites-enabled/
+
 
     SCRIPT
 
     config.vm.provision "shell", privileged: false, inline: <<-SHELL
     # Install services
-    pip3 install pipenv
-    pip3 install python-dotenv
+    pip3 install --user pipenv
+    pip3 install --user python-dotenv
+
+    # Agregar ~/.local/bin a PATH para que reconozca pipenv
+    echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc
+    export PATH=$HOME/.local/bin:$PATH
 
     # Start environment
     cd /var/www/myapp
-    pipenv shell
+    pipenv --python 3
+    
 
     # Install Flask and Gunicorn services in virtual environment
     pipenv install flask gunicorn
@@ -48,6 +49,12 @@ Vagrant.configure("2") do |config|
     sudo cp /vagrant/files/application.py /var/www/myapp/application.py 
     sudo cp /vagrant/files/wsgi.py /var/www/myapp/wsgi.py 
 
+
+    # Reload system
+    sudo systemctl daemon-reload
+    sudo systemctl enable flask_app
+    sudo systemctl start flask_app
+    sudo systemctl restart nginx
     SHELL
   
   end
