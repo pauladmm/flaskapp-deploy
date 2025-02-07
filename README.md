@@ -167,3 +167,36 @@ In this case:
 Once the MV IP is linked to this server name in the file hosts in the host, the app can be accesses through the navigator in myapp.es or www.myapp.es
 
 ![App Deployed with Nginx](/img/app-deployed-nginx.PNG)
+
+# EXTRA: APP CLONED (FROM GITHUB REPO) DEPLOYMENT
+
+The objective is deploy another app, but this time the app is cloned directly from a github repository.
+The App is https://github.com/Azure-Samples/msdocs-python-flask-webapp-quickstart.
+
+The steps are very similar to the previous. The **App would be cloned** in /var/www/ and in this directory, **permission** would be given to this new directory and the **virtual environment should be activate**. Then the **dependencies would be installed** through this command, inside the virtual environment:
+
+```
+pipenv install -r requirements.txt
+```
+
+A wsgi.py file must be created (this time _from app_ because the app name file is app.py). This file is saved in the same directory as the app.py (/var/www/msdocs-python-flask-webapp-quickstart/)
+
+```
+from app import app
+
+if __name__ == "__name__":
+    app.run(debug=False)
+
+```
+
+## Gunicorn Deploy
+
+This command will be runned inside the virtual environment to check that gunicorn is activated:
+
+```
+gunicorn --workers 4 --bind 0.0.0.0:5000 wsgi:app
+```
+
+![Msdocs App Deployed with Gunicorn](/img/msdocs-app-gunicorn-deployed.PNG)
+
+## Nginx Deploy

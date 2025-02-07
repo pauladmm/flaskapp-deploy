@@ -7,7 +7,7 @@ Vagrant.configure("2") do |config|
     config.vm.provision "shell", inline: <<-SCRIPT
   
     # Install services
-    apt-get update && sudo apt-get install -y python3-pip nginx
+    apt-get update && sudo apt-get install -y python3-pip nginx git
 
     # Start Nginx Server
     systemctl start nginx
@@ -16,6 +16,13 @@ Vagrant.configure("2") do |config|
     mkdir -p /var/www/myapp
     chown -R vagrant:www-data /var/www/myapp
     chmod -R 775 /var/www/myapp
+
+    # App cloned & permission & files
+    cd /var/www/
+    git clone https://github.com/Azure-Samples/msdocs-python-flask-webapp-quickstart
+    chown -R vagrant:www-data /var/www/msdocs-python-flask-webapp-quickstart
+    chmod -R 775 /var/www/msdocs-python-flask-webapp-quickstart
+    cp /vagrant/files/msdocs-webapp/wsgi.py /var/www/msdocs-python-flask-webapp-quickstart/wsgi.py
 
     # Copy files of virtual environment and gunicorn
     cp /vagrant/files/.env /var/www/myapp/.env
@@ -37,7 +44,7 @@ Vagrant.configure("2") do |config|
     echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc
     export PATH=$HOME/.local/bin:$PATH
 
-    # Start environment
+    # Start virtual environment
     cd /var/www/myapp
     pipenv --python 3
     
@@ -47,8 +54,12 @@ Vagrant.configure("2") do |config|
 
     # App files
     sudo cp /vagrant/files/application.py /var/www/myapp/application.py 
-    sudo cp /vagrant/files/wsgi.py /var/www/myapp/wsgi.py 
+    sudo cp /vagrant/files/wsgi.py /var/www/myapp/wsgi.py
 
+    # Msdocs-webapp virtual environment activation and requirements installation
+    cd /var/www/msdocs-python-flask-webapp-quickstart/
+    pipenv --python 3
+    pipenv install -r requirements.txt
 
     # Reload system
     sudo systemctl daemon-reload
