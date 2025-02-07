@@ -189,7 +189,7 @@ if __name__ == "__name__":
 
 ```
 
-## Gunicorn Deploy
+## Gunicorn Set Up
 
 This command will be runned inside the virtual environment to check that gunicorn is activated:
 
@@ -199,4 +199,50 @@ gunicorn --workers 4 --bind 0.0.0.0:5000 wsgi:app
 
 ![Msdocs App Deployed with Gunicorn](/img/msdocs-app-gunicorn-deployed.PNG)
 
-## Nginx Deploy
+To know the path gunicorn is executing, the comand which gunicorn is used again. this time the path is:
+
+```
+/home/vagrant/.local/share/virtualenvs/msdocs-python-flask-webapp-quickstart-YrxIX3KC/bin/gunicorn
+```
+
+## Nginx Deployment
+
+A new .service file is needed, using the previous path. The file is created in /etc/systemd/system/:
+
+```
+[Unit]
+Description=Msdocs Python Flask Webapp Quickstart
+After=network.target
+[Service]
+User=vagrant
+Group=www-data
+Environment="PATH=/home/vagrant/.local/share/virtualenvs/msdocs-python-flask-webapp-quickstart-YrxIX3KC/bin/gunicorn"
+WorkingDirectory=/var/www/msdocs-python-flask-webapp-quickstart
+ExecStart=/home/vagrant/.local/share/virtualenvs/msdocs-python-flask-webapp-quickstart-YrxIX3KC/bin/gunicorn --workers 3 --bind unix:/var/www/msdocs-python-flask-webapp-quickstart/app.sock wsgi:app
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Also, a configuration file with a server_name and the proxy_pass path. The file is created in /etc/nginx/sites-available and the symbolic link is created.
+
+```
+server {
+  listen 80;
+  server_name msdocs.es www.msdocs.es;
+
+  access_log /var/log/nginx/app.access.log;
+  error_log /var/log/nginx/app.error.log;
+
+  location / {
+    include proxy_params;
+    proxy_pass http://unix:/var/www/msdocs-python-flask-webapp-quickstart/app.sock;
+  }
+}
+```
+
+msdocs_app.service should be enabled and started, then the services should be restarted (daemon-reload and nginx).
+Hosts file should be updated with the new server_name.
+The app will be available in any of the names given.
+
+![Msdocs App Deployed with Nginx](/img/msdocs-app-nginx.PNG)

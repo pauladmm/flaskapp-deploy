@@ -12,7 +12,7 @@ Vagrant.configure("2") do |config|
     # Start Nginx Server
     systemctl start nginx
 
-    # Work directory and permission
+    # MYAPP Work directory and permission 
     mkdir -p /var/www/myapp
     chown -R vagrant:www-data /var/www/myapp
     chmod -R 775 /var/www/myapp
@@ -23,14 +23,18 @@ Vagrant.configure("2") do |config|
     chown -R vagrant:www-data /var/www/msdocs-python-flask-webapp-quickstart
     chmod -R 775 /var/www/msdocs-python-flask-webapp-quickstart
     cp /vagrant/files/msdocs-webapp/wsgi.py /var/www/msdocs-python-flask-webapp-quickstart/wsgi.py
+    cp /vagrant/files/msdocs-webapp/msdocs_app.service /etc/systemd/system/msdocs_app.service
 
-    # Copy files of virtual environment and gunicorn
+    # MYAPP copy files of virtual environment and gunicorn
     cp /vagrant/files/.env /var/www/myapp/.env
     cp /vagrant/files/flask_app.service /etc/systemd/system/flask_app.service
     
     # Nginx Server Configuration
     cp /vagrant/files/myapp.conf /etc/nginx/sites-available/myapp.conf
     ln -s /etc/nginx/sites-available/myapp.conf /etc/nginx/sites-enabled/
+
+    cp /vagrant/files/msdocs-webapp/msdocs.conf /etc/nginx/sites-available/msdocs.conf
+    ln -s /etc/nginx/sites-available/msdocs.conf /etc/nginx/sites-enabled/
 
 
     SCRIPT
@@ -52,7 +56,7 @@ Vagrant.configure("2") do |config|
     # Install Flask and Gunicorn services in virtual environment
     pipenv install flask gunicorn
 
-    # App files
+    # MYAPP files
     sudo cp /vagrant/files/application.py /var/www/myapp/application.py 
     sudo cp /vagrant/files/wsgi.py /var/www/myapp/wsgi.py
 
@@ -64,7 +68,9 @@ Vagrant.configure("2") do |config|
     # Reload system
     sudo systemctl daemon-reload
     sudo systemctl enable flask_app
+    sudo systemctl enable msdocs_app
     sudo systemctl start flask_app
+    sudo systemctl start msdocs_app
     sudo systemctl restart nginx
     SHELL
   

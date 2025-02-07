@@ -1,0 +1,12 @@
+[Unit]
+Description=Msdocs Python Flask Webapp Quickstart
+After=network.target
+[Service]
+User=vagrant
+Group=www-data
+Environment="PATH=/home/vagrant/.local/share/virtualenvs/msdocs-python-flask-webapp-quickstart-YrxIX3KC/bin/gunicorn"
+WorkingDirectory=/var/www/msdocs-python-flask-webapp-quickstart
+ExecStart=/home/vagrant/.local/share/virtualenvs/msdocs-python-flask-webapp-quickstart-YrxIX3KC/bin/gunicorn --workers 3 --bind unix:/var/www/msdocs-python-flask-webapp-quickstart/app.sock wsgi:app
+
+[Install]
+WantedBy=multi-user.target
