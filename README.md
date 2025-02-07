@@ -27,7 +27,7 @@ PATH=$PATH:/home/$vagrant/.local/bin pipenv --version
 The work directory is created: myapp
 It is mandatory to give permissions to this directory in order to allow Nginx to access to this app (in following steps).
 
-## Create the App
+## App Creation
 
 Before the app creation, the environment variables must be stored in an .env directory file, inside the app directory (var/www/myapp).
 The content of this file should be:
@@ -49,6 +49,8 @@ pipenv shell
 
 And it is showed as:
 ![pipenv shell](/img/pipenv-shell.PNG)
+
+## App Deployment with Flask and Gunicorn
 
 Inside the virtual environment, Flask and Gunicorn are installed.
 
@@ -92,3 +94,76 @@ In this case:
 ```
 /home/vagrant/.local/share/virtualenvs/myapp-UTYI2jO8/bin/gunicorn
 ```
+
+# DEPLOYMENT WITH NGINX AND GUNICORN
+
+Gunicorn must be runned as another service inside the virtual machine, so the next file must be created in etc/systemd/system/flask_app.service:
+
+```
+[Unit]
+Description=flask app service - App con flask y Gunicorn
+After=network.target
+[Service]
+User=vagrant
+Group=www-data
+Environment="PATH=/home/vagrant/.local/share/virtualenvs/myapp-UTYI2jO8/bin/gunicorn"
+WorkingDirectory=/var/www/myapp
+ExecStart=/home/vagrant/.local/share/virtualenvs/myapp-UTYI2jO8/bin/gunicorn --workers 3 --bind unix:/var/www/myapp/app.sock wsgi:app
+
+[Install]
+WantedBy=multi-user.target
+```
+
+The path and the directore of the App created previously must be specified.
+
+The system must be reloaded to add this service and the service must be started:
+
+```
+systemctl daemon-reload
+
+systemctl enable flask_app
+systemctl start flask_app
+```
+
+The name of the service is the same as the file created previously (flask_app).
+
+## Nginx Server Configuration
+
+To configure Nginx, a file .conf should be created with the name of the server and the proxy pass as it showed below:
+
+```
+server {
+  listen 80;
+  server_name myapp.es www.myapp.es;
+
+  access_log /var/log/nginx/app.access.log;
+  error_log /var/log/nginx/app.error.log;
+
+  location / {
+    include proxy_params;
+    proxy_pass http://unix:/var/www/myapp/app.sock;
+  }
+}
+```
+
+The proxy pass block is where Nginx understand it has to do inverse proxy to the socket created by Gunicorn, in order to access the Flask App created.
+
+The next steps are basic Nginx configuration:
+
+1. Copy this file in /etc/nginx/sites-available
+2. Enable symbolic link in /etc/nginx/sites-enabled/
+
+![Symbolic Link Comprobation](/img/check-symbolic-link-nginx.PNG)
+
+## App Access
+
+Due to Gunicorn is serving the App, it must be accessed by the server_name. To do that, the hosts file (Windows->System32->drivers->etc>hosts) should be modified to add the VM IP and associate it with the server_name.
+In this case:
+
+```
+192.168.56.10  myapp.es www.myapp.es
+```
+
+Once the MV IP is linked to this server name in the file hosts in the host, the app can be accesses through the navigator in myapp.es or www.myapp.es
+
+![App Deployed with Nginx](/img/app-deployed-nginx.PNG)

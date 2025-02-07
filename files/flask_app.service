@@ -1,0 +1,12 @@
+[Unit]
+Description=flask app service - App con flask y Gunicorn
+After=network.target
+[Service]
+User=vagrant
+Group=www-data
+Environment="PATH=/home/vagrant/.local/share/virtualenvs/myapp-UTYI2jO8/bin/gunicorn"
+WorkingDirectory=/var/www/myapp
+ExecStart=/home/vagrant/.local/share/virtualenvs/myapp-UTYI2jO8/bin/gunicorn --workers 3 --bind unix:/var/www/myapp/app.sock wsgi:app
+
+[Install]
+WantedBy=multi-user.target

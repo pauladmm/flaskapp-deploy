@@ -2,6 +2,7 @@ Vagrant.configure("2") do |config|
 
     config.vm.box = "debian/bullseye64"
     config.vm.network "forwarded_port", guest:5000, host:5000
+    config.vm.network "private_network", ip: "192.168.56.10"
 
     config.vm.provision "shell", inline: <<-SCRIPT
   
@@ -15,9 +16,19 @@ Vagrant.configure("2") do |config|
     mkdir -p /var/www/myapp
     chown -R vagrant:www-data /var/www/myapp
     chmod -R 775 /var/www/myapp
-    cp /vagrant/files/.env /var/www/myapp/.env
 
+    # Copy files of virtual environment and gunicorn
+    cp /vagrant/files/.env /var/www/myapp/.env
+    cp /vagrant/files/flask_app.service /etc/systemd/system/flask_app.service
     
+    # Reload system
+    systemctl daemon-reload
+    systemctl enable flask_app
+    systemctl start flask_app
+
+    # Nginx Server Configuration
+    cp /vagrant/files/myapp.conf /etc/nginx/sites-available/myapp.conf
+    ln -s /etc/nginx/sites-available/myapp.conf /etc/nginx/sites-enabled/
 
     SCRIPT
 
